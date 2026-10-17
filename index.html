@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi Restaurante – Descargas</title>
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --fondo: #f6f4fb; --tarjeta: #ffffff; --texto: #1d1b26; --suave: #625f70;
+    --primario: #5b3fb5; --verde: #2e7d32; --borde: #e3dfef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --fondo: #15131c; --tarjeta: #211e2b; --texto: #eeeaf7; --suave: #aaa5bb; --primario: #b39dff; --verde: #81c784; --borde: #353043; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fondo); color: var(--texto); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  .sub { color: var(--suave); margin: 0 0 20px; }
+  .tarjeta { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+  .version { font-size: 1.25rem; font-weight: 700; }
+  .fecha { color: var(--suave); font-size: .9rem; }
+  .boton { display: flex; align-items: center; gap: 12px; width: 100%; text-decoration: none; color: #fff;
+           background: var(--primario); border-radius: 12px; padding: 14px 16px; margin-top: 12px; font-weight: 600; }
+  .boton.windows { background: #0b6bcb; }
+  .boton small { display: block; font-weight: 400; opacity: .85; }
+  .boton .icono { font-size: 1.6rem; }
+  .notas { white-space: pre-wrap; color: var(--suave); font-size: .95rem; margin-top: 12px; }
+  ol { padding-left: 20px; margin: 8px 0 0; }
+  li { margin-bottom: 6px; }
+  h2 { font-size: 1.05rem; margin: 0 0 4px; }
+  .aviso { color: var(--verde); font-weight: 600; }
+  .error { color: #c62828; }
+  details summary { cursor: pointer; font-weight: 600; }
+  .anterior { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--borde); font-size: .95rem; }
+  .anterior a { color: var(--primario); }
+</style>
+</head>
+<body>
+<main>
+  <h1>🍽️ Mi Restaurante</h1>
+  <p class="sub">Descarga la última versión de la app.</p>
+
+  <section class="tarjeta" id="ultima">
+    <p>Cargando la última versión…</p>
+  </section>
+
+  <section class="tarjeta">
+    <h2>📱 Instalar en el celular (Android)</h2>
+    <ol>
+      <li>Toca <b>Descargar para Android</b>.</li>
+      <li>Abre el archivo descargado. Si pregunta, permite <b>“Instalar apps desconocidas”</b>.</li>
+      <li>Toca <b>Actualizar</b>. Tus datos se conservan.</li>
+    </ol>
+  </section>
+
+  <section class="tarjeta">
+    <h2>💻 Instalar en el PC de caja (Windows)</h2>
+    <ol>
+      <li>Cierra la app Mi Restaurante.</li>
+      <li>Descarga y abre el instalador <b>.msi</b>. Si Windows avisa, toca <b>Más información → Ejecutar de todas formas</b>.</li>
+      <li>Abre la app. Stock, productos, ingredientes y ventas se conservan (y se guarda una copia diaria).</li>
+    </ol>
+    <p class="aviso">Actualiza primero el PC de caja y después los celulares.</p>
+  </section>
+
+  <section class="tarjeta" id="anteriores" hidden>
+    <details><summary>Versiones anteriores</summary><div id="lista"></div></details>
+  </section>
+</main>
+<script>
+  // El repositorio se deduce de la dirección: https://USUARIO.github.io/REPOSITORIO/
+  const usuario = location.hostname.split(".")[0];
+  const repo = location.pathname.split("/").filter(Boolean)[0] || (usuario + ".github.io");
+  const api = `https://api.github.com/repos/${usuario}/${repo}/releases`;
+
+  const mb = b => (b / 1048576).toFixed(0) + " MB";
+  const fecha = s => new Date(s).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const archivo = (r, ext) => r.assets.find(a => a.name.toLowerCase().endsWith(ext));
+
+  fetch(api)
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(versiones => {
+      versiones = versiones.filter(v => !v.draft && !v.prerelease);
+      const ultima = document.getElementById("ultima");
+      if (!versiones.length) { ultima.innerHTML = "<p>Todavía no hay versiones publicadas.</p>"; return; }
+      const v = versiones[0], apk = archivo(v, ".apk"), msi = archivo(v, ".msi");
+      ultima.innerHTML = `
+        <div class="version">Versión ${esc(v.tag_name.replace(/^v/, ""))}</div>
+        <div class="fecha">Publicada el ${fecha(v.published_at)}</div>
+        ${apk ? `<a class="boton" href="${esc(apk.browser_download_url)}"><span class="icono">📱</span>
+          <span>Descargar para Android<small>${esc(apk.name)} · ${mb(apk.size)}</small></span></a>` : ""}
+        ${msi ? `<a class="boton windows" href="${esc(msi.browser_download_url)}"><span class="icono">💻</span>
+          <span>Descargar para Windows (PC de caja)<small>${esc(msi.name)} · ${mb(msi.size)}</small></span></a>` : ""}
+        ${v.body ? `<div class="notas"><b>Novedades:</b>\n${esc(v.body)}</div>` : ""}`;
+      if (versiones.length > 1) {
+        document.getElementById("anteriores").hidden = false;
+        document.getElementById("lista").innerHTML = versiones.slice(1, 11).map(o => {
+          const a = archivo(o, ".apk"), m = archivo(o, ".msi");
+          return `<div class="anterior"><span>${esc(o.tag_name)} · ${fecha(o.published_at)}</span><span>
+            ${a ? `<a href="${esc(a.browser_download_url)}">Android</a>` : ""}
+            ${m ? ` · <a href="${esc(m.browser_download_url)}">Windows</a>` : ""}</span></div>`;
+        }).join("");
+      }
+    })
+    .catch(() => {
+      document.getElementById("ultima").innerHTML =
+        `<p class="error">No se pudo cargar la lista de versiones. Revisa tu conexión a internet e intenta de nuevo.</p>
+         <p><a href="https://github.com/${esc(usuario)}/${esc(repo)}/releases/latest">Ver descargas en GitHub</a></p>`;
+    });
+</script>
+</body>
+</html>
