@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi Restaurante – Sistema de caja</title>
+<meta name="description" content="Mi Restaurante: el sistema de caja (POS) para manejar mesas, pedidos, cocina, cobros, inventario y ventas desde el PC y los celulares.">
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --fondo: #f7f5fc; --fondo-2: #efeaf9; --tarjeta: #ffffff; --texto: #1d1b26; --suave: #5f5b6e;
+    --primario: #5b3fb5; --primario-2: #7c5ce0; --sobre-primario: #ffffff; --borde: #e3dfef;
+    --rojo: #e57373; --amarillo: #ffd54f; --azul: #64b5f6; --verde: #2e7d32; --windows: #0b6bcb;
+    --sombra: 0 6px 24px rgba(40, 20, 90, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fondo: #14121b; --fondo-2: #1b1825; --tarjeta: #221f2d; --texto: #eeeaf7; --suave: #aaa5bb;
+      --primario: #b39dff; --primario-2: #9a7bff; --sobre-primario: #1a1033; --borde: #353043; --verde: #81c784;
+      --windows: #5aa9f5; --sombra: 0 6px 24px rgba(0, 0, 0, .35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--fondo); color: var(--texto); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--primario); }
+  .ancho { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  section { padding: 56px 0; scroll-margin-top: 64px; }
+  section.alterna { background: var(--fondo-2); }
+  h1, h2, h3 { line-height: 1.2; margin: 0; }
+  h2 { font-size: clamp(1.5rem, 4vw, 2rem); text-align: center; }
+  .intro { text-align: center; color: var(--suave); max-width: 640px; margin: 10px auto 32px; }
+
+  /* Barra superior */
+  .barra { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--fondo) 88%, transparent);
+           backdrop-filter: blur(10px); border-bottom: 1px solid var(--borde); }
+  .barra .ancho { display: flex; align-items: center; gap: 16px; height: 60px; }
+  .marca { font-weight: 800; font-size: 1.1rem; text-decoration: none; color: var(--texto); white-space: nowrap; }
+  .barra nav { display: flex; gap: 18px; margin-left: auto; }
+  .barra nav a { text-decoration: none; color: var(--suave); font-size: .95rem; }
+  .barra nav a:hover { color: var(--primario); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px;
+         padding: 10px 20px; font-weight: 700; text-decoration: none; border: 0; cursor: pointer; font-size: 1rem; }
+  .btn.principal { background: var(--primario); color: var(--sobre-primario); }
+  .btn.secundario { background: var(--tarjeta); color: var(--texto); border: 1px solid var(--borde); }
+  .btn.chico { padding: 8px 16px; font-size: .9rem; }
+  @media (max-width: 760px) { .barra nav { display: none; } .barra .btn { margin-left: auto; } }
+
+  /* Portada */
+  .portada { padding: 56px 0 40px; }
+  .portada .ancho { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; }
+  .portada h1 { font-size: clamp(2rem, 6vw, 3.1rem); letter-spacing: -.02em; }
+  .portada h1 span { color: var(--primario); }
+  .portada p { font-size: 1.15rem; color: var(--suave); margin: 16px 0 24px; }
+  .acciones { display: flex; flex-wrap: wrap; gap: 10px; }
+  .sellos { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 22px; color: var(--suave); font-size: .92rem; }
+  @media (max-width: 820px) { .portada .ancho { grid-template-columns: 1fr; } }
+
+  /* Maqueta del plano de mesas */
+  .maqueta { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 22px; padding: 18px; box-shadow: var(--sombra); }
+  .maqueta .titulo { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 12px; }
+  .maqueta .titulo small { font-weight: 500; color: var(--suave); }
+  .plano { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .mesa { aspect-ratio: 1; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+          background: var(--fondo-2); color: var(--texto); font-size: .72rem; line-height: 1.2; text-align: center; }
+  .mesa b { font-size: 1.4rem; }
+  .mesa.r { background: var(--rojo); color: #1a1a1a; } .mesa.a { background: var(--amarillo); color: #1a1a1a; } .mesa.z { background: var(--azul); color: #1a1a1a; }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .82rem; color: var(--suave); margin-top: 12px; }
+  .leyenda i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+  /* Tarjetas */
+  .rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+  .tarjeta { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 18px; padding: 22px; box-shadow: var(--sombra); }
+  .tarjeta .icono { font-size: 1.9rem; line-height: 1; }
+  .tarjeta h3 { font-size: 1.08rem; margin: 12px 0 6px; }
+  .tarjeta p { margin: 0; color: var(--suave); font-size: .96rem; }
+
+  /* Cómo funciona: esquema */
+  .esquema { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: center; }
+  .esquema .centro { text-align: center; }
+  .esquema .caja { background: var(--primario); color: var(--sobre-primario); border-radius: 20px; padding: 22px 18px; box-shadow: var(--sombra); }
+  .esquema .caja .icono { font-size: 2.4rem; }
+  .esquema .caja p { margin: 6px 0 0; opacity: .9; font-size: .92rem; }
+  .esquema .lado { display: grid; gap: 12px; }
+  .esquema .item { display: flex; gap: 12px; align-items: center; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 14px; padding: 12px 14px; }
+  .esquema .item .icono { font-size: 1.6rem; }
+  .esquema .item b { display: block; }
+  .esquema .item small { color: var(--suave); }
+  .esquema .flecha { color: var(--suave); font-size: 1.6rem; }
+  @media (max-width: 760px) {
+    .esquema { grid-template-columns: 1fr; }
+    .esquema .flecha { transform: rotate(90deg); justify-self: center; }
+  }
+  .bajar { text-align: center; color: var(--suave); font-size: 1.6rem; margin: 10px 0 0; }
+  .nota { text-align: center; color: var(--suave); font-size: .95rem; margin-top: 22px; }
+
+  /* Pasos del servicio */
+  .pasos { counter-reset: paso; display: grid; gap: 14px; max-width: 760px; margin: 0 auto; }
+  .paso { display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: start; background: var(--tarjeta);
+          border: 1px solid var(--borde); border-radius: 18px; padding: 18px; }
+  .paso .num { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-weight: 800; font-size: 1.3rem;
+               background: var(--fondo-2); color: var(--primario); }
+  .paso .num.r { background: var(--rojo); color: #1a1a1a; } .paso .num.a { background: var(--amarillo); color: #1a1a1a; } .paso .num.z { background: var(--azul); color: #1a1a1a; }
+  .paso h3 { font-size: 1.05rem; margin-bottom: 4px; }
+  .paso p { margin: 0; color: var(--suave); }
+  .comanda { font-family: ui-monospace, Consolas, monospace; background: var(--fondo-2); border-radius: 10px; padding: 10px 12px;
+             margin-top: 10px; font-size: .88rem; color: var(--texto); white-space: pre; overflow-x: auto; }
+
+  /* Funciones (pestañas) */
+  .pestanas { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 20px; }
+  .pestanas button { border: 1px solid var(--borde); background: var(--tarjeta); color: var(--texto); border-radius: 999px;
+                     padding: 8px 16px; font: inherit; font-size: .95rem; cursor: pointer; }
+  .pestanas button[aria-selected="true"] { background: var(--primario); color: var(--sobre-primario); border-color: var(--primario); font-weight: 700; }
+  .panel { max-width: 760px; margin: 0 auto; }
+  .panel ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .panel li { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 14px; padding: 12px 16px 12px 44px; position: relative; }
+  .panel li::before { content: "✓"; position: absolute; left: 16px; top: 12px; color: var(--verde); font-weight: 800; }
+
+  /* Preguntas */
+  .preguntas { max-width: 760px; margin: 0 auto; display: grid; gap: 10px; }
+  details { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 14px; padding: 4px 18px; }
+  summary { cursor: pointer; font-weight: 700; padding: 12px 0; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; color: var(--primario); font-size: 1.3rem; line-height: 1; }
+  details[open] summary::after { content: "–"; }
+  details p { margin: 0 0 14px; color: var(--suave); }
+
+  /* Descargas */
+  .descargas { display: grid; grid-template-columns: 1.1fr .9fr; gap: 16px; align-items: start; }
+  @media (max-width: 820px) { .descargas { grid-template-columns: 1fr; } }
+  .version { font-size: 1.3rem; font-weight: 800; }
+  .fecha { color: var(--suave); font-size: .9rem; }
+  .boton { display: flex; align-items: center; gap: 12px; width: 100%; text-decoration: none; color: #fff;
+           background: var(--primario); border-radius: 14px; padding: 14px 16px; margin-top: 12px; font-weight: 700; }
+  @media (prefers-color-scheme: dark) { .boton { color: var(--sobre-primario); } }
+  .boton.windows { background: var(--windows); }
+  .boton small { display: block; font-weight: 400; opacity: .85; }
+  .boton .icono { font-size: 1.6rem; }
+  .notas { white-space: pre-wrap; color: var(--suave); font-size: .95rem; margin-top: 14px; }
+  .instrucciones h3 { font-size: 1rem; margin: 0 0 4px; }
+  .instrucciones ol { padding-left: 20px; margin: 6px 0 16px; color: var(--suave); }
+  .aviso { color: var(--verde); font-weight: 700; margin: 0; }
+  .error { color: #c62828; }
+  .anterior { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--borde); font-size: .95rem; }
+
+  footer { text-align: center; color: var(--suave); font-size: .9rem; padding: 32px 16px 48px; }
+</style>
+</head>
+<body>
+
+<header class="barra">
+  <div class="ancho">
+    <a class="marca" href="#inicio">🍽️ Mi Restaurante</a>
+    <nav aria-label="Secciones">
+      <a href="#beneficios">Beneficios</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#funciones">Funciones</a>
+      <a href="#preguntas">Preguntas</a>
+    </nav>
+    <a class="btn principal chico" href="#descargar">Descargar</a>
+  </div>
+</header>
+
+<main id="inicio">
+  <!-- Portada -->
+  <section class="portada">
+    <div class="ancho">
+      <div>
+        <h1>Tu restaurante, <span>ordenado</span> desde la mesa hasta la caja.</h1>
+        <p>Mi Restaurante es el sistema de caja (POS) que conecta a tus meseros, la cocina y la caja.
+          Toma pedidos desde el celular, la comanda sale impresa al instante y cobras en segundos.</p>
+        <div class="acciones">
+          <a class="btn principal" href="#descargar">⬇ Descargar la app</a>
+          <a class="btn secundario" href="#como-funciona">Ver cómo funciona</a>
+        </div>
+        <div class="sellos">
+          <span>✓ Funciona con el WiFi del local</span>
+          <span>✓ PC, Android y iPhone</span>
+          <span>✓ Copia de seguridad diaria</span>
+        </div>
+      </div>
+      <div class="maqueta" aria-label="Ejemplo del plano de mesas">
+        <div class="titulo">Salón principal <small>5 de 8 mesas ocupadas</small></div>
+        <div class="plano">
+          <div class="mesa r"><b>1</b>4 pers.<br>Angel</div>
+          <div class="mesa a"><b>2</b>2 pers.<br>Daniel</div>
+          <div class="mesa"><b>3</b></div>
+          <div class="mesa z"><b>4</b>6 pers.<br>Angel</div>
+          <div class="mesa"><b>5</b></div>
+          <div class="mesa a"><b>6</b>3 pers.<br>Marina</div>
+          <div class="mesa a"><b>7</b>2 pers.<br>Daniel</div>
+          <div class="mesa"><b>8</b></div>
+        </div>
+        <div class="leyenda">
+          <span><i style="background:var(--rojo)"></i>Abierta, sin platos</span>
+          <span><i style="background:var(--amarillo)"></i>Con platos</span>
+          <span><i style="background:var(--azul)"></i>Recibo impreso</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Beneficios -->
+  <section id="beneficios" class="alterna">
+    <div class="ancho">
+      <h2>¿Por qué usar Mi Restaurante?</h2>
+      <p class="intro">Menos papelitos, menos errores y más control del negocio, sin complicarse.</p>
+      <div class="rejilla">
+        <div class="tarjeta"><div class="icono">⚡</div><h3>Atiendes más rápido</h3>
+          <p>El mesero toma el pedido en su celular y la comanda sale impresa en la cocina en segundos. Nada de ir y venir.</p></div>
+        <div class="tarjeta"><div class="icono">🎯</div><h3>Menos errores en cocina</h3>
+          <p>Cada plato sale con su cantidad y sus comentarios (“2 con salsa, 3 con arroz”), y las entradas aparecen de primeras.</p></div>
+        <div class="tarjeta"><div class="icono">👀</div><h3>Ves todo de un vistazo</h3>
+          <p>Con los colores de las mesas sabes cuáles esperan pedido, cuáles están comiendo y cuáles van a pagar.</p></div>
+        <div class="tarjeta"><div class="icono">💳</div><h3>Cobros sin enredos</h3>
+          <p>Pago mixto (parte en efectivo y parte con tarjeta o QR), cálculo del cambio y recibo impreso. El cajón se abre solo.</p></div>
+        <div class="tarjeta"><div class="icono">📦</div><h3>Controlas tu inventario</h3>
+          <p>Cada venta descuenta del stock y de los ingredientes. Te avisa cuando un producto se está acabando.</p></div>
+        <div class="tarjeta"><div class="icono">📊</div><h3>Sabes cuánto vendes</h3>
+          <p>Ventas del día, lo que está en proceso, productos más vendidos y medios de pago. Exporta a Excel cuando quieras.</p></div>
+        <div class="tarjeta"><div class="icono">🔒</div><h3>Cada quien con su PIN</h3>
+          <p>Administrador y meseros con su propio PIN. Un mesero no puede borrar lo que ya se envió a cocina.</p></div>
+        <div class="tarjeta"><div class="icono">🛡️</div><h3>Tus datos, seguros</h3>
+          <p>Todo se guarda en el PC de tu restaurante, con copia de seguridad automática cada día. Actualizar no borra nada.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo funciona -->
+  <section id="como-funciona">
+    <div class="ancho">
+      <h2>Cómo funciona</h2>
+      <p class="intro">El PC de caja es el corazón del restaurante. Los celulares se conectan a él por el WiFi del local y todos ven lo mismo, al mismo tiempo.</p>
+      <div class="esquema">
+        <div class="lado">
+          <div class="item"><span class="icono">📱</span><div><b>Celulares Android</b><small>Se enlazan escaneando un código QR</small></div></div>
+          <div class="item"><span class="icono">🍏</span><div><b>iPhone o cualquier navegador</b><small>Versión web, sin instalar nada</small></div></div>
+        </div>
+        <div class="flecha" aria-hidden="true">⇄</div>
+        <div class="centro">
+          <div class="caja"><div class="icono">💻</div><b>PC de caja</b>
+            <p>Guarda mesas, pedidos, productos, ventas y usuarios</p></div>
+        </div>
+      </div>
+      <div class="bajar" aria-hidden="true">⇣</div>
+      <div class="rejilla" style="margin-top:6px">
+        <div class="tarjeta"><div class="icono">🧾</div><h3>Impresora de cocina</h3><p>Recibe las comandas de los platos.</p></div>
+        <div class="tarjeta"><div class="icono">🥤</div><h3>Bar o jugos</h3><p>Cada área recibe solo lo suyo: las bebidas van al bar.</p></div>
+        <div class="tarjeta"><div class="icono">🧮</div><h3>Caja</h3><p>Imprime los recibos y abre el cajón del dinero.</p></div>
+      </div>
+      <p class="nota">No necesitas internet para trabajar: basta con el WiFi del restaurante.</p>
+    </div>
+  </section>
+
+  <!-- Un servicio paso a paso -->
+  <section class="alterna">
+    <div class="ancho">
+      <h2>Una mesa, paso a paso</h2>
+      <p class="intro">Así se ve un servicio completo, desde que llegan los clientes hasta que pagan.</p>
+      <div class="pasos">
+        <div class="paso"><div class="num r">1</div><div><h3>Abres la mesa</h3>
+          <p>Tocas la mesa e indicas cuántas personas son. La mesa se pone <b>roja</b>: está esperando su pedido.</p></div></div>
+        <div class="paso"><div class="num a">2</div><div><h3>Tomas el pedido</h3>
+          <p>Buscas los platos por carpetas o escribiendo el nombre, agregas comentarios y tocas <b>Enviar a cocina</b>. La mesa se pone <b>amarilla</b>.</p>
+          <div class="comanda">*** ENTRADAS ***
+x2 Empanadas
+------------------------
+x5 Lengua
+   >> (2 CON SALSA, 3 CON ARROZ)</div></div></div>
+        <div class="paso"><div class="num z">3</div><div><h3>Imprimes el recibo</h3>
+          <p>Cuando piden la cuenta, revisas los precios en pantalla e imprimes el <b>recibo</b>. La mesa se pone <b>azul</b>: lista para cobrar.</p></div></div>
+        <div class="paso"><div class="num">4</div><div><h3>Cobras</h3>
+          <p>Eliges el medio de pago (o varios), la app calcula el cambio y la mesa queda libre. La venta pasa sola al reporte del día.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Funciones -->
+  <section id="funciones">
+    <div class="ancho">
+      <h2>Todo lo que puedes hacer</h2>
+      <p class="intro">Toca un tema para ver sus funciones.</p>
+      <div class="pestanas" role="tablist" aria-label="Funciones">
+        <button role="tab" aria-selected="true" data-panel="mesas">🪑 Mesas</button>
+        <button role="tab" aria-selected="false" data-panel="pedidos">📝 Pedidos</button>
+        <button role="tab" aria-selected="false" data-panel="cocina">🖨️ Impresión</button>
+        <button role="tab" aria-selected="false" data-panel="cobro">💳 Cobro</button>
+        <button role="tab" aria-selected="false" data-panel="inventario">📦 Inventario</button>
+        <button role="tab" aria-selected="false" data-panel="ventas">📊 Ventas</button>
+        <button role="tab" aria-selected="false" data-panel="usuarios">👥 Usuarios</button>
+      </div>
+      <div class="panel" role="tabpanel" id="panel-mesas"><ul>
+        <li>Plano de mesas por salón, igual en el PC y en los celulares.</li>
+        <li>Colores según el estado: rojo (sin platos), amarillo (con platos) y azul (recibo impreso).</li>
+        <li>Cambiar a los clientes de mesa o unir dos cuentas en una.</li>
+        <li>Dividir la cuenta pasando algunos productos a otra mesa.</li>
+        <li>Acomodar las mesas arrastrándolas, agregar o quitar mesas y salones.</li>
+      </ul></div>
+      <div class="panel" role="tabpanel" id="panel-pedidos" hidden><ul>
+        <li>Productos organizados en carpetas y subcarpetas (Ej: Bebidas › Jugos).</li>
+        <li>Buscador rápido: escribe “jamon” y encuentra “Jamón”.</li>
+        <li>Comentarios por plato: “sin cebolla”, “bien asado”, “para llevar”.</li>
+        <li>Precio de cada producto visible al agregarlo y en el total de la mesa.</li>
+        <li>Varios meseros pueden pedir en la misma mesa.</li>
+      </ul></div>
+      <div class="panel" role="tabpanel" id="panel-cocina" hidden><ul>
+        <li>Cada área (cocina, bar, jugos…) recibe solo sus productos.</li>
+        <li>La comanda agrupa cada plato con sus comentarios y pone las entradas de primeras.</li>
+        <li>Tamaño de letra ajustable para productos, comentarios y recibos.</li>
+        <li>Aviso “CAMBIO DE MESA” para que la cocina lleve los platos a la mesa correcta.</li>
+        <li>Impresoras por red, WiFi, USB en el PC o Bluetooth en el celular.</li>
+      </ul></div>
+      <div class="panel" role="tabpanel" id="panel-cobro" hidden><ul>
+        <li>Detalle de la cuenta con precios para revisarla antes de confirmar.</li>
+        <li>Pago mixto: parte en efectivo y parte con tarjeta, Nequi o QR.</li>
+        <li>Cálculo automático del cambio.</li>
+        <li>Recibo impreso y apertura del cajón cuando se paga en efectivo.</li>
+        <li>Puedes elegir qué meseros tienen permiso para cobrar.</li>
+      </ul></div>
+      <div class="panel" role="tabpanel" id="panel-inventario" hidden><ul>
+        <li>Stock de cada producto que se descuenta solo con cada pedido.</li>
+        <li>Ingredientes compartidos: “Medio mondongo” gasta media porción de la misma sopa que “Mondongo”.</li>
+        <li>Aviso cuando a un producto le quedan menos de 2 unidades.</li>
+        <li>No deja vender lo que ya no hay.</li>
+        <li>Registro rápido cuando llega mercancía.</li>
+      </ul></div>
+      <div class="panel" role="tabpanel" id="panel-ventas" hidden><ul>
+        <li>Total vendido del día y ventas en proceso (mesas abiertas aún sin cobrar).</li>
+        <li>Filtro por fecha y por medio de pago.</li>
+        <li>Los 5 productos más vendidos.</li>
+        <li>Exportar las ventas a Excel.</li>
+        <li>Quién atendió y quién cobró cada venta.</li>
+      </ul></div>
+      <div class="panel" role="tabpanel" id="panel-usuarios" hidden><ul>
+        <li>Administrador y meseros, cada uno con su PIN.</li>
+        <li>El usuario se bloquea después de 5 intentos de PIN equivocados.</li>
+        <li>Los meseros solo ven mesas y pedidos; el administrador ve todo.</li>
+        <li>Lo ya enviado a cocina solo lo puede quitar un administrador.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- Preguntas -->
+  <section id="preguntas" class="alterna">
+    <div class="ancho">
+      <h2>Preguntas frecuentes</h2>
+      <p class="intro">Lo que más nos preguntan.</p>
+      <div class="preguntas">
+        <details><summary>¿Necesito internet para usarla?</summary>
+          <p>No. El PC de caja y los celulares se comunican por el WiFi del restaurante. Internet solo hace falta para descargar actualizaciones desde esta página.</p></details>
+        <details><summary>¿Qué necesito para empezar?</summary>
+          <p>Un PC con Windows para la caja, los celulares de los meseros (Android o iPhone) conectados al mismo WiFi y, si quieres comandas y recibos en papel, una impresora térmica.</p></details>
+        <details><summary>¿Funciona en iPhone?</summary>
+          <p>Sí, desde el navegador: se abre la dirección que muestra la caja y se agrega a la pantalla de inicio. Funciona dentro del WiFi del restaurante.</p></details>
+        <details><summary>¿Se pierden mis datos al actualizar?</summary>
+          <p>No. Las ventas, el stock, los productos y los usuarios se conservan en cada actualización. Además, el PC de caja guarda una copia de seguridad automática cada día.</p></details>
+        <details><summary>¿Puedo usarla en un solo celular, sin PC?</summary>
+          <p>Sí. Al abrir la app en Android puedes elegir “Usar solo en este celular”; los datos quedan guardados en ese teléfono.</p></details>
+        <details><summary>¿Un mesero puede borrar pedidos?</summary>
+          <p>Solo puede quitar lo que aún no se ha enviado a cocina. Lo enviado únicamente lo puede quitar un administrador.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Descargas -->
+  <section id="descargar">
+    <div class="ancho">
+      <h2>Descargar Mi Restaurante</h2>
+      <p class="intro">Siempre encontrarás aquí la versión más reciente.</p>
+      <div class="descargas">
+        <div class="tarjeta" id="ultima"><p>Cargando la última versión…</p></div>
+        <div class="tarjeta instrucciones">
+          <h3>💻 En el PC de caja (Windows)</h3>
+          <ol>
+            <li>Cierra la app Mi Restaurante.</li>
+            <li>Descarga y abre el instalador <b>.msi</b>. Si Windows avisa, toca <b>Más información → Ejecutar de todas formas</b>.</li>
+            <li>Abre la app. Tus datos se conservan.</li>
+          </ol>
+          <h3>📱 En el celular (Android)</h3>
+          <ol>
+            <li>Toca <b>Descargar para Android</b>.</li>
+            <li>Abre el archivo. Si pregunta, permite <b>“Instalar apps desconocidas”</b>.</li>
+            <li>Toca <b>Instalar</b> o <b>Actualizar</b>.</li>
+          </ol>
+          <p class="aviso">Actualiza primero el PC de caja y después los celulares.</p>
+        </div>
+      </div>
+      <div class="tarjeta" id="anteriores" style="margin-top:16px" hidden>
+        <details><summary>Versiones anteriores</summary><div id="lista"></div></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>🍽️ Mi Restaurante · Sistema de caja para restaurantes</footer>
+
+<script>
+  // ---- Pestañas de funciones ----
+  const pestanas = document.querySelectorAll('[role="tab"]');
+  pestanas.forEach(b => b.addEventListener("click", () => {
+    pestanas.forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
+    document.querySelectorAll('[role="tabpanel"]').forEach(p => p.hidden = p.id !== "panel-" + b.dataset.panel);
+  }));
+
+  // ---- Descargas: el repositorio se deduce de la dirección https://USUARIO.github.io/REPOSITORIO/ ----
+  const usuario = location.hostname.split(".")[0];
+  const repo = location.pathname.split("/").filter(Boolean)[0] || (usuario + ".github.io");
+  const api = `https://api.github.com/repos/${usuario}/${repo}/releases`;
+
+  const mb = b => (b / 1048576).toFixed(0) + " MB";
+  const fecha = s => new Date(s).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const archivo = (r, ext) => r.assets.find(a => a.name.toLowerCase().endsWith(ext));
+
+  fetch(api)
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(versiones => {
+      versiones = versiones.filter(v => !v.draft && !v.prerelease);
+      const ultima = document.getElementById("ultima");
+      if (!versiones.length) { ultima.innerHTML = "<p>Todavía no hay versiones publicadas.</p>"; return; }
+      const v = versiones[0], apk = archivo(v, ".apk"), msi = archivo(v, ".msi");
+      ultima.innerHTML = `
+        <div class="version">Versión ${esc(v.tag_name.replace(/^v/, ""))}</div>
+        <div class="fecha">Publicada el ${fecha(v.published_at)}</div>
+        ${msi ? `<a class="boton windows" href="${esc(msi.browser_download_url)}"><span class="icono">💻</span>
+          <span>Descargar para Windows (PC de caja)<small>${esc(msi.name)} · ${mb(msi.size)}</small></span></a>` : ""}
+        ${apk ? `<a class="boton" href="${esc(apk.browser_download_url)}"><span class="icono">📱</span>
+          <span>Descargar para Android<small>${esc(apk.name)} · ${mb(apk.size)}</small></span></a>` : ""}
+        ${v.body ? `<div class="notas"><b>Novedades:</b>\n${esc(v.body)}</div>` : ""}`;
+      if (versiones.length > 1) {
+        document.getElementById("anteriores").hidden = false;
+        document.getElementById("lista").innerHTML = versiones.slice(1, 11).map(o => {
+          const a = archivo(o, ".apk"), m = archivo(o, ".msi");
+          return `<div class="anterior"><span>${esc(o.tag_name)} · ${fecha(o.published_at)}</span><span>
+            ${a ? `<a href="${esc(a.browser_download_url)}">Android</a>` : ""}
+            ${m ? ` · <a href="${esc(m.browser_download_url)}">Windows</a>` : ""}</span></div>`;
+        }).join("");
+      }
+    })
+    .catch(() => {
+      document.getElementById("ultima").innerHTML =
+        `<p class="error">No se pudo cargar la lista de versiones. Revisa tu conexión a internet e intenta de nuevo.</p>
+         <p><a href="https://github.com/${esc(usuario)}/${esc(repo)}/releases/latest">Ver descargas en GitHub</a></p>`;
+    });
+</script>
+</body>
+</html>
