@@ -3,9 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mi Restaurante – Sistema de caja</title>
-<meta name="description" content="Mi Restaurante: el sistema de caja (POS) para manejar mesas, pedidos, cocina, cobros, inventario y ventas desde el PC y los celulares.">
-<meta name="robots" content="noindex">
+<title>Servicios POS – Sistema de caja (POS) para restaurantes</title>
+<meta name="description" content="Servicios POS: sistema de caja para restaurantes. Mesas, pedidos desde el celular, comandas a cocina, cobros con pago mixto, inventario y reportes de ventas. Para Windows, Android y iPhone.">
+<meta name="keywords" content="POS restaurante, sistema de caja restaurante, software restaurante, comandas, punto de venta, Colombia">
+<link rel="canonical" href="https://danielpena22.github.io/mirestaurante-descargas/">
+<link rel="icon" type="image/png" href="icono.png">
+<link rel="apple-touch-icon" href="icono.png">
+<meta name="theme-color" content="#1F6FEB">
+<!-- Vista previa al compartir el enlace (WhatsApp, Facebook…) -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_CO">
+<meta property="og:site_name" content="Servicios POS">
+<meta property="og:title" content="Servicios POS – Sistema de caja para restaurantes">
+<meta property="og:description" content="Mesas, pedidos desde el celular, comandas a cocina, cobros e inventario. Funciona con el WiFi del restaurante.">
+<meta property="og:url" content="https://danielpena22.github.io/mirestaurante-descargas/">
+<meta property="og:image" content="https://danielpena22.github.io/mirestaurante-descargas/compartir.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Servicios POS",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Windows, Android, iOS (web)",
+  "description": "Sistema de caja (POS) para restaurantes: mesas, pedidos, comandas a cocina, cobros, inventario y ventas.",
+  "url": "https://danielpena22.github.io/mirestaurante-descargas/",
+  "image": "https://danielpena22.github.io/mirestaurante-descargas/logo.png",
+  "inLanguage": "es"
+}
+</script>
 <style>
   :root {
     --fondo: #f7f5fc; --fondo-2: #efeaf9; --tarjeta: #ffffff; --texto: #1d1b26; --suave: #5f5b6e;
@@ -35,7 +63,10 @@
   .barra { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--fondo) 88%, transparent);
            backdrop-filter: blur(10px); border-bottom: 1px solid var(--borde); }
   .barra .ancho { display: flex; align-items: center; gap: 16px; height: 60px; }
-  .marca { font-weight: 800; font-size: 1.1rem; text-decoration: none; color: var(--texto); white-space: nowrap; }
+  .marca { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.15rem; text-decoration: none; color: var(--texto); white-space: nowrap; }
+  .marca img { border-radius: 8px; background: #fff; }
+  .marca span { color: #1F6FEB; }
+  @media (prefers-color-scheme: dark) { .marca span { color: #6ea8ff; } }
   .barra nav { display: flex; gap: 18px; margin-left: auto; }
   .barra nav a { text-decoration: none; color: var(--suave); font-size: .95rem; }
   .barra nav a:hover { color: var(--primario); }
@@ -150,7 +181,7 @@
 
 <header class="barra">
   <div class="ancho">
-    <a class="marca" href="#inicio">🍽️ Mi Restaurante</a>
+    <a class="marca" href="#inicio"><img src="icono.png" alt="" width="36" height="36">Servicios <span>POS</span></a>
     <nav aria-label="Secciones">
       <a href="#beneficios">Beneficios</a>
       <a href="#como-funciona">Cómo funciona</a>
@@ -167,7 +198,7 @@
     <div class="ancho">
       <div>
         <h1>Tu restaurante, <span>ordenado</span> desde la mesa hasta la caja.</h1>
-        <p>Mi Restaurante es el sistema de caja (POS) que conecta a tus meseros, la cocina y la caja.
+        <p><b>Servicios POS</b> es el sistema de caja para restaurantes que conecta a tus meseros, la cocina y la caja.
           Toma pedidos desde el celular, la comanda sale impresa al instante y cobras en segundos.</p>
         <div class="acciones">
           <a class="btn principal" href="#descargar">⬇ Descargar la app</a>
@@ -203,7 +234,7 @@
   <!-- Beneficios -->
   <section id="beneficios" class="alterna">
     <div class="ancho">
-      <h2>¿Por qué usar Mi Restaurante?</h2>
+      <h2>¿Por qué usar Servicios POS?</h2>
       <p class="intro">Menos papelitos, menos errores y más control del negocio, sin complicarse.</p>
       <div class="rejilla">
         <div class="tarjeta"><div class="icono">⚡</div><h3>Atiendes más rápido</h3>
@@ -365,14 +396,14 @@ x5 Lengua
   <!-- Descargas -->
   <section id="descargar">
     <div class="ancho">
-      <h2>Descargar Mi Restaurante</h2>
+      <h2>Descargar Servicios POS</h2>
       <p class="intro">Siempre encontrarás aquí la versión más reciente.</p>
       <div class="descargas">
         <div class="tarjeta" id="ultima"><p>Cargando la última versión…</p></div>
         <div class="tarjeta instrucciones">
           <h3>💻 En el PC de caja (Windows)</h3>
           <ol>
-            <li>Cierra la app Mi Restaurante.</li>
+            <li>Cierra la app si está abierta.</li>
             <li>Descarga y abre el instalador <b>.msi</b>. Si Windows avisa, toca <b>Más información → Ejecutar de todas formas</b>.</li>
             <li>Abre la app. Tus datos se conservan.</li>
           </ol>
@@ -392,7 +423,7 @@ x5 Lengua
   </section>
 </main>
 
-<footer>🍽️ Mi Restaurante · Sistema de caja para restaurantes</footer>
+<footer><img src="logo.png" alt="Servicios POS" width="72" height="72" style="border-radius:14px;background:#fff"><br>Servicios POS · Sistema de caja para restaurantes</footer>
 
 <script>
   // ---- Pestañas de funciones ----
