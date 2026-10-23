@@ -174,6 +174,9 @@
   .error { color: #c62828; }
   .anterior { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--borde); font-size: .95rem; }
 
+  .precio { text-align: center; margin-bottom: 16px; }
+  .precio .valor { font-size: 2rem; font-weight: 800; color: var(--primario); }
+  footer a { color: var(--suave); }
   footer { text-align: center; color: var(--suave); font-size: .9rem; padding: 32px 16px 48px; }
 </style>
 </head>
@@ -398,6 +401,7 @@ x5 Lengua
     <div class="ancho">
       <h2>Descargar Servicios POS</h2>
       <p class="intro">Siempre encontrarás aquí la versión más reciente.</p>
+      <div class="tarjeta precio" id="precio" hidden></div>
       <div class="descargas">
         <div class="tarjeta" id="ultima"><p>Cargando la última versión…</p></div>
         <div class="tarjeta instrucciones">
@@ -423,7 +427,8 @@ x5 Lengua
   </section>
 </main>
 
-<footer><img src="logo.png" alt="Servicios POS" width="72" height="72" style="border-radius:14px;background:#fff"><br>Servicios POS · Sistema de caja para restaurantes</footer>
+<footer><img src="logo.png" alt="Servicios POS" width="72" height="72" style="border-radius:14px;background:#fff"><br>Servicios POS · Sistema de caja para restaurantes<br>
+  <a href="politica-de-datos.html">Política de tratamiento de datos</a> · <a href="terminos.html">Términos y condiciones</a></footer>
 
 <script>
   // ---- Pestañas de funciones ----
@@ -432,6 +437,16 @@ x5 Lengua
     pestanas.forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
     document.querySelectorAll('[role="tabpanel"]').forEach(p => p.hidden = p.id !== "panel-" + b.dataset.panel);
   }));
+
+  // ---- Precio (config.json: se cambia sin tocar la página) ----
+  fetch("config.json?t=" + Date.now()).then(r => r.json()).then(c => {
+    if (!c.precioMensual) return;
+    const valor = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(c.precioMensual);
+    const caja = document.getElementById("precio");
+    caja.innerHTML = `<div class="valor">${valor}</div><div>por cada 30 días · <b>7 días de prueba gratis</b></div>
+      <div class="fecha">Pago seguro con Wompi: tarjeta, PSE, Nequi o Bancolombia. El pago se hace desde la app.</div>`;
+    caja.hidden = false;
+  }).catch(() => {});
 
   // ---- Descargas: el repositorio se deduce de la dirección https://USUARIO.github.io/REPOSITORIO/ ----
   const usuario = location.hostname.split(".")[0];
