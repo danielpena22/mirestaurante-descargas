@@ -4,4 +4,12 @@
     <loc>https://danielpena22.github.io/mirestaurante-descargas/</loc>
     <changefreq>monthly</changefreq>
   </url>
+  <url>
+    <loc>https://danielpena22.github.io/mirestaurante-descargas/politica-de-datos.html</loc>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://danielpena22.github.io/mirestaurante-descargas/terminos.html</loc>
+    <changefreq>yearly</changefreq>
+  </url>
 </urlset>
